@@ -1,19 +1,24 @@
 import { WebSocketServer } from "ws";
 
-import validateAuth from "./middlewares/validateAuth.ts";
+import validateAuth from "./middlewares/validate-auth.ts";
 import commonConfig from "./config/index.ts";
 
 import SocketConnectionManager from "./managers/connections.ts";
 
-const webSocketServer = new WebSocketServer({ port: commonConfig.WS_PORT });
+const webSocketServer = new WebSocketServer({
+	port: commonConfig.WS_PORT,
+	verifyClient: async (info, done) => {
+		const authorizationHeader = info.req.headers["authorization"] || "";
 
-webSocketServer.on("connection", async (socketConnection, req) => {
-	const authorizationHeader = req.headers["authorization"] || "";
+		const isAuthHeaderValid = await validateAuth(authorizationHeader);
 
-	const isAuthHeaderValid = await validateAuth(authorizationHeader);
+		if (!isAuthHeaderValid) return done(false);
 
-	if (!isAuthHeaderValid) return socketConnection.terminate();
+		return done(true);
+	},
+});
 
+webSocketServer.on("connection", async (socketConnection) => {
 	try {
 		SocketConnectionManager.registerConnection(socketConnection);
 	} catch (error) {
