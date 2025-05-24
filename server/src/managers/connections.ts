@@ -1,84 +1,84 @@
-import type WebSocket from "ws";
-
-import { v4 as uuid } from "uuid";
+import type { WebSocket } from "ws";
 
 import commonConfig from "../config/index.ts";
+
+import RealtimeDatabaseClientSocket from "../classes/realtime-database-client-socket.ts";
 
 class SocketConnectionManager {
 	static HEART_BEAT_TIME_DIFF = 15_000;
 
-	private connections = new Map<
-		string,
-		{ isAlive: boolean; socket: WebSocket }
-	>();
+	private sockets = new Map<WebSocket, RealtimeDatabaseClientSocket>();
 
-	private heartBeatRegisteredInterval: NodeJS.Timeout | void;
-
-	private sendPingHeartBeatToCheckForConnection(connection: WebSocket) {
-		connection.ping();
-	}
+	private registeredHeartBeatInterval: NodeJS.Timeout | void;
 
 	constructor() {
-		this.heartBeatRegisteredInterval = setInterval(() => {
-			const connectionsAvailable = Array.from(this.connections.keys());
-
-			connectionsAvailable.forEach((connectionId) => {
-				const connection = this.connections.get(connectionId);
-
-				if (!connection) return;
-
-				if (!connection.isAlive) {
-					// Response from client hasn't come back in the defined timeframe, terminate this connection and clean it up.
-					connection.socket.terminate();
-					this.connections.delete(connectionId);
-
-					return;
-				}
-
-				connection.isAlive = false; // Mark it as not alive, and wait for 'pong' to come back from client.
-
-				this.sendPingHeartBeatToCheckForConnection(connection.socket);
-			});
-		}, SocketConnectionManager.HEART_BEAT_TIME_DIFF);
+		this.registeredHeartBeatInterval = setInterval(
+			this.hearbeatCheck,
+			SocketConnectionManager.HEART_BEAT_TIME_DIFF
+		);
 	}
 
 	registerConnection(connection: WebSocket) {
-		if (this.connections.size >= commonConfig.MAX_CONNECTIONS)
+		if (this.sockets.size >= commonConfig.MAX_CONNECTIONS)
 			throw new Error("Reached max connection limit for server");
 
-		const connectionId = uuid();
+		const realtimeDatabaseSocket = new RealtimeDatabaseClientSocket(connection);
 
-		this.connections.set(connectionId, {
-			socket: connection,
-			isAlive: true,
-		});
+		this.sockets.set(connection, realtimeDatabaseSocket);
 
-		connection.on("pong", () => {
-			// Connection got a response back
-			const status = this.connections.get(connectionId);
+		realtimeDatabaseSocket.pong(
+			// Connection got a response back for pong
+			() => (realtimeDatabaseSocket.isAlive = true)
+		);
 
-			if (status) status.isAlive = true;
-		});
-
-		return;
+		return realtimeDatabaseSocket;
 	}
 
+	private closeSocket(connection: WebSocket) {
+		const realtimeDatabaseSocket = this.sockets.get(connection);
+
+		if (!realtimeDatabaseSocket) return;
+
+		realtimeDatabaseSocket.terminateConnection();
+
+		this.sockets.delete(connection);
+	}
+
+	private hearbeatCheck = () => {
+		const connectionsAvailable = Array.from(this.sockets.keys());
+
+		connectionsAvailable.forEach((connection) => {
+			const realtimeDatabaseSocket = this.sockets.get(connection);
+
+			if (!realtimeDatabaseSocket) return;
+
+			if (!realtimeDatabaseSocket.isAlive) {
+				// Response from client hasn't come back in the defined timeframe, terminate this connection and clean it up.
+				return this.closeSocket(connection);
+			}
+
+			// Mark tje connection as not alive, and wait for 'pong' to come back from client to mark it as 'alive'.
+			realtimeDatabaseSocket.isAlive = false;
+			realtimeDatabaseSocket.ping();
+		});
+	};
+
 	_destruct() {
-		if (this.heartBeatRegisteredInterval)
-			this.heartBeatRegisteredInterval = clearInterval(
-				this.heartBeatRegisteredInterval
+		if (this.registeredHeartBeatInterval)
+			this.registeredHeartBeatInterval = clearInterval(
+				this.registeredHeartBeatInterval
 			);
 
-		const connectionsStillOpen = Array.from(this.connections.values());
+		const connectionsStillOpen = Array.from(this.sockets.keys());
 
-		for (const { socket } of connectionsStillOpen)
+		for (const connection of connectionsStillOpen)
 			try {
-				socket.terminate();
+				this.closeSocket(connection);
 			} catch {
 				//
 			}
 
-		this.connections.clear();
+		this.sockets.clear();
 	}
 }
 
