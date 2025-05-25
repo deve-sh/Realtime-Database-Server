@@ -24,6 +24,12 @@ class RealtimeDatabaseClientSocket {
 
 	constructor(connection: WebSocket) {
 		this.connection = connection;
+
+		this.connection.on("close", () => {
+			if (this.detachActions) {
+				// TODO: Add handlers for detach actions for this socket
+			}
+		});
 	}
 
 	listenToChange(dataPath: string) {
@@ -34,7 +40,7 @@ class RealtimeDatabaseClientSocket {
 		return this.listeningTo.delete(dataPath);
 	}
 
-	onDetach(action: SET_DISCONNECTION_HANDLER) {
+	markForDetach(action: SET_DISCONNECTION_HANDLER) {
 		return this.detachActions.push(action);
 	}
 
@@ -74,6 +80,17 @@ class RealtimeDatabaseClientSocket {
 
 	terminateConnection() {
 		return this.connection.terminate();
+	}
+
+	isListeningToPath(dataPath: string) {
+		// TODO: dataPath can be recursive or granular, so we need to have `listeningTo` as a tree structure instead
+		return this.listeningTo.has(dataPath);
+	}
+
+	sendMessageToClient(message: any) {
+		return this.connection.send(
+			typeof message === "string" ? message : JSON.stringify(message)
+		);
 	}
 }
 
