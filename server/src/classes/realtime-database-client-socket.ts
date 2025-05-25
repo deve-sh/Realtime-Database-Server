@@ -2,7 +2,12 @@ import { v4 as uuid } from "uuid";
 
 import type { WebSocket, RawData } from "ws";
 
-import type { SET_DISCONNECTION_HANDLER } from "../types/message";
+import type {
+	SET_DISCONNECTION_HANDLER,
+	SOCKET_MESSAGE_FROM_CLIENT,
+} from "../types/message";
+
+import { validateMessageFromClient } from "../config/message-validator";
 
 class RealtimeDatabaseClientSocket {
 	private listeningTo = new Set<string>();
@@ -41,9 +46,18 @@ class RealtimeDatabaseClientSocket {
 			if (isBinary) return; // Not supported
 
 			try {
-				callback(JSON.parse(data.toString()));
+				const message = JSON.parse(
+					data.toString()
+				) as SOCKET_MESSAGE_FROM_CLIENT;
+
+				const isValidMessage = validateMessageFromClient(message).isValid;
+
+				if (!isValidMessage) return;
+
+				callback(message);
 			} catch {
-				callback(data.toString());
+				// JSON formatted messages are the only ones supported
+				return;
 			}
 		};
 

@@ -33,3 +33,9 @@ export type SET_DISCONNECTION_HANDLER = {
 	action: "remove" | "update";
 	updates?: string | null | Number | Record<string, any>;
 };
+
+export type SOCKET_MESSAGE_FROM_CLIENT =
+	| SUBSCRIBE_TO_DATA
+	| UNSUBSCRIBE_TO_DATA
+	| WRITE_DATA
+	| SET_DISCONNECTION_HANDLER;
