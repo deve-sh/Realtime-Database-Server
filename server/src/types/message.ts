@@ -29,9 +29,7 @@ export type WRITE_DATA = CREATE_DATA | UPDATE_DATA | DELETE_DATA;
 
 export type SET_DISCONNECTION_HANDLER = {
 	type: "action_on_disconnect";
-	dataPath: string;
-	action: "remove" | "update";
-	updates?: string | null | Number | Record<string, any>;
+	action: UPDATE_DATA | DELETE_DATA;
 };
 
 export type SOCKET_MESSAGE_FROM_CLIENT =
