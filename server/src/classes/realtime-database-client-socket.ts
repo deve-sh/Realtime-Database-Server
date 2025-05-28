@@ -89,8 +89,10 @@ class RealtimeDatabaseClientSocket {
 	}
 
 	isListeningToPath(dataPath: string) {
-		// TODO: dataPath can be recursive or granular, so we need to have `listeningTo` as a tree structure instead
-		return this.listeningTo.has(dataPath);
+		return Array.from(this.listeningTo).find((path) =>
+			// Handles both exact path and any parent paths the socket might be listening to
+			dataPath.startsWith(path)
+		);
 	}
 
 	sendMessageToClient(message: any) {

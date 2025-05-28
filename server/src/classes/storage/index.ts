@@ -1,6 +1,8 @@
 import InMemoryTree from "./InMemoryTree";
 import DataStorageLayer, { JSONValue } from "./interface";
 
+import SocketConnectionsManager from "../connections";
+
 class DataStorage implements DataStorageLayer {
 	layer: typeof InMemoryTree;
 
@@ -18,12 +20,41 @@ class DataStorage implements DataStorageLayer {
 		return this.layer.get(path);
 	}
 
-	set(path: string, value: JSONValue) {
-		return this.layer.set(path, value);
+	async set(path: string, value: JSONValue) {
+		try {
+			const result = await this.layer.set(path, value);
+
+			const updatedValueForPath = await this.get(path);
+
+			// Propagate changes to listeners of this and its parent paths
+			SocketConnectionsManager.getConnectionsSubscribedToPath(path).forEach(
+				(socket) => {
+					socket.sendMessageToClient({
+						type: "value_updated",
+						path,
+						value: updatedValueForPath,
+					});
+				}
+			);
+			return result;
+		} catch (error) {
+			//
+		}
 	}
 
-	delete(path: string) {
-		return this.layer.delete(path);
+	async delete(path: string) {
+		try {
+			const result = await this.layer.delete(path);
+
+			// Propagate changes to listeners of this and its parent paths
+			SocketConnectionsManager.getConnectionsSubscribedToPath(path).forEach(
+				(socket) => socket.sendMessageToClient({ type: "value_deleted", path })
+			);
+
+			return result;
+		} catch (error) {
+			//
+		}
 	}
 }
 

@@ -3,7 +3,7 @@ import { WebSocketServer } from "ws";
 import validateApiKey from "./middlewares/validate-api-key.ts";
 import commonConfig from "./config/index.ts";
 
-import SocketConnectionManager from "./managers/connections.ts";
+import SocketConnectionManager from "./classes/connections.ts";
 
 const webSocketServer = new WebSocketServer({
 	port: commonConfig.WS_PORT,

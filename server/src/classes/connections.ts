@@ -2,7 +2,7 @@ import type { WebSocket } from "ws";
 
 import commonConfig from "../config/index.ts";
 
-import RealtimeDatabaseClientSocket from "../classes/realtime-database-client-socket.ts";
+import RealtimeDatabaseClientSocket from "./realtime-database-client-socket.ts";
 
 class SocketConnectionManager {
 	static HEART_BEAT_TIME_DIFF = 15_000;
@@ -32,6 +32,12 @@ class SocketConnectionManager {
 		);
 
 		return realtimeDatabaseSocket;
+	}
+
+	getConnectionsSubscribedToPath(path: string) {
+		return Array.from(this.sockets.values()).filter((socket) =>
+			socket.isListeningToPath(path)
+		);
 	}
 
 	private closeSocket(connection: WebSocket) {
