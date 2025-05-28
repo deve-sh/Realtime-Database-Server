@@ -9,7 +9,7 @@ type Operation = {
 	action: WRITE_DATA | SUBSCRIBE_TO_DATA;
 	// Things like uid, email etc that can be used to write expressions for evaluating access to read and write to a resource
 	// Passed down by the controller responsible for reading and writing data from a request
-	authContext: Record<string, any>;
+	authContext: Record<string, any> | null;
 };
 
 class SecurityRulesManager {
@@ -53,7 +53,7 @@ class SecurityRulesManager {
 	private evaluateJSExpression(
 		expression: string,
 		pathContext: Record<string, string>,
-		authContext: Record<string, string | number>
+		authContext: Record<string, string | number> | null
 	) {
 		let jsExpr = expression;
 

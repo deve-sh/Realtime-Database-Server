@@ -1,29 +1,23 @@
-type JSONPrimitive = string | number | boolean | null;
+import DataStorageLayer, { JSONObject, JSONValue } from "./interface";
 
-type JSONValue = JSONPrimitive | JSONObject | JSONValue[];
-
-type JSONObject = {
-	[key: string]: JSONValue;
-};
-
-class InMemoryTree {
+class InMemoryTree implements DataStorageLayer {
 	private data: JSONObject;
 
 	constructor(initialData: JSONObject = {}) {
 		this.data = initialData;
 	}
 
-	get(path: string): JSONValue | undefined {
+	async get(path: string) {
 		const keys = this.parsePath(path);
 		return this.getRecursive(this.data, keys);
 	}
 
-	set(path: string, value: JSONValue): void {
+	async set(path: string, value: JSONValue) {
 		const keys = this.parsePath(path);
 		this.setRecursive(this.data, keys, value);
 	}
 
-	delete(path: string): void {
+	async delete(path: string) {
 		const keys = this.parsePath(path);
 		this.deleteRecursive(this.data, keys);
 	}
