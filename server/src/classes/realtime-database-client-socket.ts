@@ -33,9 +33,8 @@ class RealtimeDatabaseClientSocket {
 		this.connection = connection;
 
 		this.connection.on("close", () => {
-			if (this.detachActions) {
-				// TODO: Add handlers for detach actions for this socket
-			}
+			for (const action of this.detachActions)
+				this.handleMessageFromClient(action as SOCKET_MESSAGE_FROM_CLIENT);
 		});
 	}
 
