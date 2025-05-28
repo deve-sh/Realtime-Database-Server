@@ -6,14 +6,21 @@ import type {
 	SET_DISCONNECTION_HANDLER,
 	SOCKET_MESSAGE_FROM_CLIENT,
 } from "../types/message";
+import type { JSONValue } from "./storage/interface";
+
+import validateAuthToken from "../middlewares/validate-token";
+
+import securityRules from "./security-rules";
+import dataStorage from "./storage";
 
 import { validateMessageFromClient } from "../config/message-validator";
 
 class RealtimeDatabaseClientSocket {
 	private listeningTo = new Set<string>();
 	private detachActions: SET_DISCONNECTION_HANDLER[] = [];
-
 	private connection: WebSocket;
+
+	private authContext: Record<string, string | number> | null = null;
 
 	private messageListener: ((data: RawData, isBinary: boolean) => any) | null =
 		null;
@@ -44,7 +51,7 @@ class RealtimeDatabaseClientSocket {
 		return this.detachActions.push(action);
 	}
 
-	onMessage(callback: (data: string | Record<string, any>) => any) {
+	onMessage() {
 		if (this.messageListener)
 			this.connection.off("message", this.messageListener);
 
@@ -60,7 +67,7 @@ class RealtimeDatabaseClientSocket {
 
 				if (!isValidMessage) return;
 
-				callback(message);
+				this.handleMessageFromClient(message);
 			} catch {
 				// JSON formatted messages are the only ones supported
 				return;
@@ -91,6 +98,114 @@ class RealtimeDatabaseClientSocket {
 		return this.connection.send(
 			typeof message === "string" ? message : JSON.stringify(message)
 		);
+	}
+
+	private async handleMessageFromClient(
+		messageFromClient: SOCKET_MESSAGE_FROM_CLIENT
+	) {
+		switch (messageFromClient.type) {
+			case "set_auth_context": {
+				const authContext = await validateAuthToken(messageFromClient.token);
+				this.authContext = authContext;
+				break;
+			}
+			case "create_data":
+			case "update_data":
+			case "delete_data": {
+				const isOpPermitted = await securityRules.isOperationAllowed({
+					action: messageFromClient,
+					authContext: this.authContext,
+				});
+
+				if (!isOpPermitted)
+					return this.sendMessageToClient({
+						error: "Not allowed",
+						status: 401,
+						replied_to: messageFromClient.message_id,
+					});
+
+				let opStatus = 201;
+				let opError = null;
+
+				if (messageFromClient.type === "create_data")
+					await dataStorage.set(
+						messageFromClient.dataPath,
+						messageFromClient.data as JSONValue
+					);
+
+				if (messageFromClient.type === "update_data") {
+					await dataStorage.set(
+						messageFromClient.dataPath,
+						messageFromClient.updates as JSONValue
+					);
+					opStatus = 200;
+				}
+
+				if (messageFromClient.type === "delete_data") {
+					await dataStorage.delete(messageFromClient.dataPath);
+					opStatus = 204;
+				}
+
+				return this.sendMessageToClient({
+					error: opError,
+					status: opStatus,
+					replied_to: messageFromClient.message_id,
+				});
+			}
+			case "subscribe": {
+				const isOpPermitted = await securityRules.isOperationAllowed({
+					action: messageFromClient,
+					authContext: this.authContext,
+				});
+
+				if (!isOpPermitted)
+					return this.sendMessageToClient({
+						error: "Not allowed",
+						status: 401,
+						replied_to: messageFromClient.message_id,
+					});
+
+				await this.listenToChange(messageFromClient.dataPath);
+
+				return this.sendMessageToClient({
+					error: null,
+					status: 200,
+					replied_to: messageFromClient.message_id,
+				});
+			}
+			case "unsubscribe": {
+				await this.detachFromChange(messageFromClient.dataPath);
+
+				return this.sendMessageToClient({
+					error: null,
+					status: 200,
+					replied_to: messageFromClient.message_id,
+				});
+			}
+			case "action_on_disconnect": {
+				const isOpPermitted = await securityRules.isOperationAllowed({
+					action: messageFromClient.action,
+					authContext: this.authContext,
+				});
+
+				if (!isOpPermitted)
+					return this.sendMessageToClient({
+						error: "Not allowed",
+						status: 401,
+						replied_to: messageFromClient.message_id,
+					});
+
+				await this.markForDetach(messageFromClient);
+
+				return this.sendMessageToClient({
+					error: null,
+					status: 200,
+					replied_to: messageFromClient.message_id,
+				});
+			}
+			default:
+				break;
+		}
 	}
 }
 

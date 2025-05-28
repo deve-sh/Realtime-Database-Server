@@ -1,6 +1,6 @@
 import { WebSocketServer } from "ws";
 
-import validateAuth from "./middlewares/validate-auth.ts";
+import validateApiKey from "./middlewares/validate-api-key.ts";
 import commonConfig from "./config/index.ts";
 
 import SocketConnectionManager from "./managers/connections.ts";
@@ -10,7 +10,7 @@ const webSocketServer = new WebSocketServer({
 	verifyClient: async (info, done) => {
 		const authorizationHeader = info.req.headers["authorization"] || "";
 
-		const isAuthHeaderValid = await validateAuth(authorizationHeader);
+		const isAuthHeaderValid = await validateApiKey(authorizationHeader);
 
 		if (!isAuthHeaderValid) return done(false);
 

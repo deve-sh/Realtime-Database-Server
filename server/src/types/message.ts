@@ -1,3 +1,8 @@
+export type SET_AUTH_CONTEXT_FOR_CONNECTION = {
+	type: "set_auth_context";
+	token: string;
+};
+
 export type SUBSCRIBE_TO_DATA = {
 	type: "subscribe";
 	dataPath: string;
@@ -32,8 +37,10 @@ export type SET_DISCONNECTION_HANDLER = {
 	action: UPDATE_DATA | DELETE_DATA;
 };
 
-export type SOCKET_MESSAGE_FROM_CLIENT =
+export type SOCKET_MESSAGE_FROM_CLIENT = { message_id: string } & (
+	| SET_AUTH_CONTEXT_FOR_CONNECTION
 	| SUBSCRIBE_TO_DATA
 	| UNSUBSCRIBE_TO_DATA
 	| WRITE_DATA
-	| SET_DISCONNECTION_HANDLER;
+	| SET_DISCONNECTION_HANDLER
+);
