@@ -32,28 +32,6 @@ class RealtimeDatabaseClientSocket {
 	constructor(connection: WebSocket) {
 		this.connection = connection;
 
-		this.connection.on("close", () => {
-			for (const action of this.detachActions)
-				this.handleMessageFromClient(action as SOCKET_MESSAGE_FROM_CLIENT);
-		});
-	}
-
-	listenToChange(dataPath: string) {
-		return this.listeningTo.add(dataPath);
-	}
-
-	detachFromChange(dataPath: string) {
-		return this.listeningTo.delete(dataPath);
-	}
-
-	markForDetach(action: SET_DISCONNECTION_HANDLER) {
-		return this.detachActions.push(action);
-	}
-
-	onMessage() {
-		if (this.messageListener)
-			this.connection.off("message", this.messageListener);
-
 		this.messageListener = (data: RawData, isBinary: boolean) => {
 			if (isBinary) return; // Not supported
 
@@ -74,6 +52,23 @@ class RealtimeDatabaseClientSocket {
 		};
 
 		this.connection.on("message", this.messageListener);
+
+		this.connection.on("close", () => {
+			for (const action of this.detachActions)
+				this.handleMessageFromClient(action as SOCKET_MESSAGE_FROM_CLIENT);
+		});
+	}
+
+	listenToChange(dataPath: string) {
+		return this.listeningTo.add(dataPath);
+	}
+
+	detachFromChange(dataPath: string) {
+		return this.listeningTo.delete(dataPath);
+	}
+
+	markForDetach(action: SET_DISCONNECTION_HANDLER) {
+		return this.detachActions.push(action);
 	}
 
 	ping() {
@@ -172,7 +167,7 @@ class RealtimeDatabaseClientSocket {
 					error: null,
 					status: 200,
 					replied_to: messageFromClient.message_id,
-					data: dataStorage.get(messageFromClient.dataPath) || null
+					data: dataStorage.get(messageFromClient.dataPath) || null,
 				});
 			}
 			case "unsubscribe": {

@@ -21,5 +21,24 @@ describe("Server should accept and deny connections as expected", async () => {
 		await vi.waitUntil(() => wsClient.readyState === wsClient.OPEN);
 
 		expect(wsClient.readyState).toBe(wsClient.OPEN);
+
+		await wsClient.close();
+	});
+
+	test("there are pings coming from the server for heartbeat checks", async () => {
+		const wsClient = new WebSocket(SERVER_WS_URL, {
+			headers: { Authorization: "API-Key <dummy-key>" },
+		});
+
+		let pingReceived = false;
+
+		wsClient.on("ping", () => {
+			pingReceived = true;
+		});
+
+		await vi.waitUntil(() => wsClient.readyState === wsClient.OPEN);
+		await vi.waitUntil(() => pingReceived === true);
+
+		expect(pingReceived).toBe(true);
 	});
 });
