@@ -2,10 +2,11 @@
 	"name": "realtime-database-server",
 	"version": "1.0.0",
 	"main": "src/index.ts",
-  "type": "module",
+	"type": "module",
 	"scripts": {
 		"dev": "node --experimental-strip-types --watch src/index.ts",
-		"start": "node --experimental-strip-types src/index.ts"
+		"start": "node --experimental-strip-types src/index.ts",
+		"test": "vitest"
 	},
 	"author": "Devesh Kumar <contact@devesh.tech>",
 	"license": "MIT",
@@ -16,6 +17,8 @@
 		"ws": "^8.18.2"
 	},
 	"devDependencies": {
-		"@types/ws": "^8.18.1"
+		"@types/ws": "^8.18.1",
+		"vitest": "^3.1.4",
+		"wait-on": "^8.0.3"
 	}
 }
