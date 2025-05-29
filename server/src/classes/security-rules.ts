@@ -1,9 +1,9 @@
 import type {
 	SECURITY_RULES_SYNTAX,
 	RuleNode,
-} from "../types/security-rules-syntax";
+} from "../types/security-rules-syntax.ts";
 
-import type { SUBSCRIBE_TO_DATA, WRITE_DATA } from "../types/message";
+import type { SUBSCRIBE_TO_DATA, WRITE_DATA } from "../types/message.ts";
 
 type Operation = {
 	action: WRITE_DATA | SUBSCRIBE_TO_DATA;

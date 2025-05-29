@@ -1,7 +1,7 @@
-import InMemoryTree from "./InMemoryTree";
-import DataStorageLayer, { JSONValue } from "./interface";
+import InMemoryTree from "./InMemoryTree.ts";
+import type { DataStorageLayer, JSONValue } from "../../types/storage-interface.ts";
 
-import SocketConnectionsManager from "../connections";
+import SocketConnectionsManager from "../connections.ts";
 
 class DataStorage implements DataStorageLayer {
 	layer: typeof InMemoryTree;

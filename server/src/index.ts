@@ -18,6 +18,10 @@ const webSocketServer = new WebSocketServer({
 	},
 });
 
+webSocketServer.on("listening", async () => {
+	console.log("Web socket server listening");
+});
+
 webSocketServer.on("connection", async (socketConnection) => {
 	try {
 		SocketConnectionManager.registerConnection(socketConnection);
@@ -31,3 +35,5 @@ webSocketServer.on("close", () => {
 
 	SocketConnectionManager._destruct();
 });
+
+export default webSocketServer;

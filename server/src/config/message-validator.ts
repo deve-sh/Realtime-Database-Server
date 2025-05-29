@@ -1,4 +1,4 @@
-import type { SOCKET_MESSAGE_FROM_CLIENT } from "../types/message";
+import type { SOCKET_MESSAGE_FROM_CLIENT } from "../types/message.ts";
 
 export const validateMessageFromClient = (
 	message: SOCKET_MESSAGE_FROM_CLIENT
@@ -8,7 +8,7 @@ export const validateMessageFromClient = (
 
 	switch (message.type) {
 		case "action_on_disconnect": {
-			if (!message.action || !message.dataPath) {
+			if (!message.action || !message.action.dataPath) {
 				isValid = false;
 				error = "Invalid dataPath or action for detach action";
 			}

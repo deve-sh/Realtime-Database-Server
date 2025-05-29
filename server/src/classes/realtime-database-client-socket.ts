@@ -5,15 +5,15 @@ import type { WebSocket, RawData } from "ws";
 import type {
 	SET_DISCONNECTION_HANDLER,
 	SOCKET_MESSAGE_FROM_CLIENT,
-} from "../types/message";
-import type { JSONValue } from "./storage/interface";
+} from "../types/message.ts";
+import type { JSONValue } from "../types/storage-interface.ts";
 
-import validateAuthToken from "../middlewares/validate-token";
+import validateAuthToken from "../middlewares/validate-token.ts";
 
-import securityRules from "./security-rules";
-import dataStorage from "./storage";
+import securityRules from "./security-rules.ts";
+import dataStorage from "./storage/index.ts";
 
-import { validateMessageFromClient } from "../config/message-validator";
+import { validateMessageFromClient } from "../config/message-validator.ts";
 
 class RealtimeDatabaseClientSocket {
 	private listeningTo = new Set<string>();
@@ -172,6 +172,7 @@ class RealtimeDatabaseClientSocket {
 					error: null,
 					status: 200,
 					replied_to: messageFromClient.message_id,
+					data: dataStorage.get(messageFromClient.dataPath) || null
 				});
 			}
 			case "unsubscribe": {

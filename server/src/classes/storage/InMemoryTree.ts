@@ -1,4 +1,4 @@
-import DataStorageLayer, { JSONObject, JSONValue } from "./interface";
+import type { DataStorageLayer, JSONObject, JSONValue } from "../../types/storage-interface.ts";
 
 class InMemoryTree implements DataStorageLayer {
 	private data: JSONObject;
