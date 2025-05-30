@@ -1,3 +1,3 @@
-import webSocketServer from "../../src/index.ts";
+import startWebSocketServer from "../../src/index.ts";
 
-export const server = webSocketServer;
+export default startWebSocketServer;
