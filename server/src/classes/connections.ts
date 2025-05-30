@@ -1,12 +1,14 @@
 import type { WebSocket } from "ws";
 
+import { getServerEnv } from "../config/env.ts";
+
 import commonConfig from "../config/index.ts";
 
 import RealtimeDatabaseClientSocket from "./realtime-database-client-socket.ts";
 
 class SocketConnectionManager {
 	static HEART_BEAT_TIME_DIFF =
-		Number(process.env.HEART_BEAT_TIME_DIFF) || 15_000;
+		Number(getServerEnv("HEART_BEAT_TIME_DIFF")) || 15_000;
 
 	private sockets = new Map<WebSocket, RealtimeDatabaseClientSocket>();
 

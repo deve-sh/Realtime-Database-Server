@@ -1,7 +1,9 @@
+import { getServerEnv } from "./env.ts";
+
 const config = () => {
 	return {
-		WS_PORT: Number(process.env.WS_PORT) || 8080,
-		MAX_CONNECTIONS: Number(process.env.MAX_CONNECTIONS) || 200,
+		WS_PORT: Number(getServerEnv("WS_PORT")) || 8080,
+		MAX_CONNECTIONS: Number(getServerEnv("MAX_CONNECTIONS")) || 200,
 	};
 };
 

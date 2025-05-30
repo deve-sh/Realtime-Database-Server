@@ -3,6 +3,8 @@ import type {
 	RuleNode,
 } from "../types/security-rules-syntax.ts";
 
+import { getServerEnv } from "../config/env.ts";
+
 import type { SUBSCRIBE_TO_DATA, WRITE_DATA } from "../types/message.ts";
 
 type Operation = {
@@ -16,9 +18,9 @@ class SecurityRulesManager {
 	rules: SECURITY_RULES_SYNTAX = { rules: {} };
 
 	constructor() {
-		if (process.env.SECURITY_RULES_TO_INIT) {
+		if (getServerEnv("SECURITY_RULES_TO_INIT")) {
 			this.rules = JSON.parse(
-				process.env.SECURITY_RULES_TO_INIT
+				getServerEnv("SECURITY_RULES_TO_INIT").toString()
 			) as SECURITY_RULES_SYNTAX;
 		}
 	}

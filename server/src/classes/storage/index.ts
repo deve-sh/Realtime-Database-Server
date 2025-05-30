@@ -1,5 +1,10 @@
 import InMemoryTree from "./InMemoryTree.ts";
-import type { DataStorageLayer, JSONValue } from "../../types/storage-interface.ts";
+import type {
+	DataStorageLayer,
+	JSONValue,
+} from "../../types/storage-interface.ts";
+
+import { getServerEnv } from "../../config/env.ts";
 
 import SocketConnectionsManager from "../connections.ts";
 
@@ -7,7 +12,7 @@ class DataStorage implements DataStorageLayer {
 	layer: typeof InMemoryTree;
 
 	constructor() {
-		switch (process.env.STORAGE_LAYER) {
+		switch (getServerEnv("STORAGE_LAYER")) {
 			case "in-memory":
 			default: {
 				this.layer = InMemoryTree;
