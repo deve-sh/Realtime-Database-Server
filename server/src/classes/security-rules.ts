@@ -18,6 +18,11 @@ class SecurityRulesManager {
 	rules: SECURITY_RULES_SYNTAX = { rules: {} };
 
 	constructor() {
+		// console.log(
+		// 	"Security rules provided:",
+		// 	getServerEnv("SECURITY_RULES_TO_INIT")
+		// );
+
 		if (getServerEnv("SECURITY_RULES_TO_INIT")) {
 			this.rules = JSON.parse(
 				getServerEnv("SECURITY_RULES_TO_INIT").toString()

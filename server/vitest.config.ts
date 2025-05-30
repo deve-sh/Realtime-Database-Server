@@ -2,7 +2,13 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
 	test: {
-		globals: true,
-		globalSetup: "./tests/server/setup.ts",
+		poolOptions: {
+			threads: {
+				singleThread: true,
+				isolate: false,
+			},
+		},
+		isolate: false,
+		pool: "threads",
 	},
 });

@@ -1,24 +1,32 @@
 import startWebSocketServer from "../server";
 
-export default async function startupTestWebSocketServer(
-	env?: Record<string, string | number>
-) {
-	const { server, setServerEnv } = startWebSocketServer(env);
+let mockServer, mockSetServerEnv;
 
-	(globalThis as any).__server = server;
-	(globalThis as any).__setServerEnv = setServerEnv;
+export async function startupTestWebSocketServer(
+	env: Record<string, string | number> = { HEART_BEAT_TIME_DIFF: 150 }
+) {
+	const { server: startedWebSocketServer, setServerEnv: serverEnvSetter } =
+		await startWebSocketServer(env);
+
+	mockServer = startedWebSocketServer;
+	mockSetServerEnv = serverEnvSetter;
 }
 
-function stopAnyRunningTestWebSocketServer() {
-	(globalThis as any).__server.close();
-	(globalThis as any).__setServerEnv = () => null;
+export async function stopAnyRunningTestWebSocketServer() {
+	return new Promise((res, rej) => {
+		mockServer.close((err: Error) => {
+			console.log("Error closing the server:", err);
+			if (err) return rej(err);
+			mockSetServerEnv = () => null;
+			res(true);
+		});
+	});
 }
 
 export async function restartWebSocketServer(
 	env?: Record<string, string | number>
 ) {
-	stopAnyRunningTestWebSocketServer();
-	startupTestWebSocketServer(env);
-}
+	await stopAnyRunningTestWebSocketServer();
 
-export const teardown = stopAnyRunningTestWebSocketServer;
+	await startupTestWebSocketServer(env);
+}

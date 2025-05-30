@@ -1,11 +1,24 @@
 import WebSocket from "ws";
 
-import { describe, expect, test, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 
 import { SERVER_WS_URL } from "./server/config";
 
-describe("Server should accept and deny connections as expected", async () => {
-	test("connection denying when auth header isn't sent", async () => {
+import {
+	startupTestWebSocketServer,
+	stopAnyRunningTestWebSocketServer,
+} from "./server/setup";
+
+describe.sequential("Server should accept and deny connections as expected", async () => {
+	beforeAll(async () => {
+		await startupTestWebSocketServer();
+	});
+
+	afterAll(async () => {
+		await stopAnyRunningTestWebSocketServer();
+	});
+
+	test.sequential("connection denying when auth header isn't sent", async () => {
 		const wsClient = new WebSocket(SERVER_WS_URL);
 
 		await vi.waitUntil(() => wsClient.readyState === wsClient.CLOSED);
@@ -13,7 +26,7 @@ describe("Server should accept and deny connections as expected", async () => {
 		expect(wsClient.readyState).toBe(wsClient.CLOSED);
 	});
 
-	test("connection acceptance when auth header is sent", async () => {
+	test.sequential("connection acceptance when auth header is sent", async () => {
 		const wsClient = new WebSocket(SERVER_WS_URL, {
 			headers: { Authorization: "Bearer dummy-token" },
 		});
@@ -25,7 +38,7 @@ describe("Server should accept and deny connections as expected", async () => {
 		await wsClient.close();
 	});
 
-	test("there are pings coming from the server for heartbeat checks", async () => {
+	test.sequential("there are pings coming from the server for heartbeat checks", async () => {
 		const wsClient = new WebSocket(SERVER_WS_URL, {
 			headers: { Authorization: "API-Key <dummy-key>" },
 		});

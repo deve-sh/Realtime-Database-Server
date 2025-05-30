@@ -1,4 +1,4 @@
-const dummyStarterSecurityRules = {
+const mockStarterSecurityRules = {
 	rules: {
 		users: {
 			$uid: {
@@ -9,4 +9,4 @@ const dummyStarterSecurityRules = {
 	},
 };
 
-export default dummyStarterSecurityRules;
+export default mockStarterSecurityRules;
