@@ -10,6 +10,12 @@ export const validateMessageFromClient = (
 	if (process.env.NODE_ENV !== "production")
 		if (message.type.startsWith("test_mode_")) return { isValid, error };
 
+	if (!(message as SOCKET_MESSAGE_FROM_CLIENT).message_id) {
+		isValid = false;
+		error = "message_id parameter not provided for replying to";
+		return { isValid, error };
+	}
+
 	switch (message.type) {
 		case "action_on_disconnect": {
 			if (!message.action || !message.action.dataPath) {
