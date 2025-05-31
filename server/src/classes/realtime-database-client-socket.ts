@@ -12,6 +12,9 @@ import validateAuthToken from "../middlewares/validate-token.ts";
 
 import securityRules from "./security-rules.ts";
 import dataStorage from "./storage/index.ts";
+import devAndTestMode, {
+	type TEST_MODE_MESSAGES_FROM_CLIENT,
+} from "./dev-and-test-mode/index.ts";
 
 import { validateMessageFromClient } from "../config/message-validator.ts";
 
@@ -97,8 +100,18 @@ class RealtimeDatabaseClientSocket {
 	}
 
 	private async handleMessageFromClient(
-		messageFromClient: SOCKET_MESSAGE_FROM_CLIENT
+		messageFromClient:
+			| SOCKET_MESSAGE_FROM_CLIENT
+			| TEST_MODE_MESSAGES_FROM_CLIENT
 	) {
+		if (process.env.NODE_ENV !== "production") {
+			// operating in dev mode
+			if (messageFromClient.type.startsWith("test_mode_"))
+				return devAndTestMode.handleTestModeOperation(
+					messageFromClient as TEST_MODE_MESSAGES_FROM_CLIENT
+				);
+		}
+
 		switch (messageFromClient.type) {
 			case "set_auth_context": {
 				const authContext = await validateAuthToken(messageFromClient.token);

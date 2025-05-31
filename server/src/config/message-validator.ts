@@ -1,10 +1,14 @@
 import type { SOCKET_MESSAGE_FROM_CLIENT } from "../types/message.ts";
+import type { TEST_MODE_MESSAGES_FROM_CLIENT } from "../classes/dev-and-test-mode/index.ts";
 
 export const validateMessageFromClient = (
-	message: SOCKET_MESSAGE_FROM_CLIENT
+	message: SOCKET_MESSAGE_FROM_CLIENT | TEST_MODE_MESSAGES_FROM_CLIENT
 ) => {
 	let isValid = true,
 		error = null;
+
+	if (process.env.NODE_ENV !== "production")
+		if (message.type.startsWith("test_mode_")) return { isValid, error };
 
 	switch (message.type) {
 		case "action_on_disconnect": {

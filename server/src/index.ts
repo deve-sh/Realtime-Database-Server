@@ -10,7 +10,7 @@ import { setServerEnv } from "./config/env.ts";
 		WS_PORT?: number;
 		MAX_CONNECTIONS?: number;
 		HEART_BEAT_TIME_DIFF?: number;
-		SECURITY_RULES_TO_INIT?: string;
+		SECURITY_RULES?: string;
 		STORAGE_LAYER?: string;
 	}
 */
