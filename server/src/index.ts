@@ -1,3 +1,7 @@
+import { config as setupEnvVarFileIfAny } from "dotenv";
+
+setupEnvVarFileIfAny();
+
 import { WebSocketServer } from "ws";
 
 import { fileURLToPath } from "url";
