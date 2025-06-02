@@ -6,20 +6,20 @@
 	"scripts": {
 		"dev": "node --experimental-strip-types --watch src/index.ts",
 		"start": "node --experimental-strip-types src/index.ts",
-		"test": "vitest"
+		"test": "concurrently \"npm run start\" \"vitest\""
 	},
 	"author": "Devesh Kumar <contact@devesh.tech>",
 	"license": "MIT",
 	"description": "A basic recreation of Firebase Realtime Database Server-side",
 	"dependencies": {
+		"dotenv": "^16.5.0",
 		"express": "^5.1.0",
 		"uuid": "^11.1.0",
 		"ws": "^8.18.2"
 	},
 	"devDependencies": {
 		"@types/ws": "^8.18.1",
-		"dotenv": "^16.5.0",
-		"vitest": "^3.1.4",
-		"wait-on": "^8.0.3"
+		"concurrently": "^9.1.2",
+		"vitest": "^3.1.4"
 	}
 }
