@@ -6,6 +6,8 @@ import { describe, expect, test, vi } from "vitest";
 
 import { SERVER_WS_URL } from "./server/config";
 
+import mockStarterSecurityRules from "./mocks/dummy-starter-security-rules";
+
 describe.sequential("Tests for detach actions", async () => {
 	test.sequential(
 		"changes should be relayed to WebSockets listening to a path",
@@ -20,9 +22,22 @@ describe.sequential("Tests for detach actions", async () => {
 			await vi.waitUntil(() => wsClient1.readyState === wsClient1.OPEN);
 			await vi.waitUntil(() => wsClient2.readyState === wsClient2.OPEN);
 
+			// Allow for security rules
+			wsClient1.send(
+				JSON.stringify({
+					message_id: v4(),
+					type: "test_mode_set_env_variable",
+					data: {
+						key: "SECURITY_RULES",
+						value: JSON.stringify(mockStarterSecurityRules),
+					},
+				})
+			);
+
 			// Create data at a path
 			wsClient1.send(
 				JSON.stringify({
+					message_id: v4(),
 					type: "create_data",
 					dataPath: "/users/uid-abc",
 					data: { isLoggedIn: true },
@@ -30,11 +45,14 @@ describe.sequential("Tests for detach actions", async () => {
 			);
 
 			// Mark a path to be deleted when ws client 1 disconnects
+			const messageId = v4();
+
 			wsClient1.send(
 				JSON.stringify({
-					message_id: v4(),
+					message_id: messageId,
 					type: "action_on_disconnect",
 					action: {
+						message_id: messageId,
 						type: "delete_data",
 						dataPath: "/users/uid-abc",
 					},
@@ -45,7 +63,8 @@ describe.sequential("Tests for detach actions", async () => {
 			let responseReceivedFromServerOnDelete: any = null;
 
 			wsClient2.on("message", (data) => {
-				responseReceivedFromServerOnDelete = JSON.parse(data.toString());
+				if (JSON.parse(data.toString()).type === "value_deleted")
+					responseReceivedFromServerOnDelete = JSON.parse(data.toString());
 			});
 
 			const messageToServer = {
@@ -56,12 +75,14 @@ describe.sequential("Tests for detach actions", async () => {
 
 			wsClient2.send(JSON.stringify(messageToServer));
 
+			await new Promise((resolve) => setTimeout(resolve, 500));
+
 			// Now disconnect ws client 1
 			wsClient1.close();
 
-			await vi.waitUntil(() => responseReceivedFromServerOnDelete !== null);
-
-			console.log(responseReceivedFromServerOnDelete)
+			await vi.waitUntil(() => responseReceivedFromServerOnDelete !== null, {
+				timeout: 1_000,
+			});
 
 			expect(responseReceivedFromServerOnDelete).toBeTruthy();
 		}

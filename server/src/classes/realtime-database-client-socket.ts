@@ -57,8 +57,11 @@ class RealtimeDatabaseClientSocket {
 		this.connection.on("message", this.messageListener);
 
 		this.connection.on("close", () => {
-			for (const action of this.detachActions)
-				this.handleMessageFromClient(action as SOCKET_MESSAGE_FROM_CLIENT);
+			for (const detachAction of this.detachActions) {
+				this.handleMessageFromClient(
+					detachAction.action as SOCKET_MESSAGE_FROM_CLIENT
+				);
+			}
 		});
 	}
 
